@@ -1,0 +1,18 @@
+#!/usr/bin/python
+
+from os import walk
+from os import system
+
+CMD = '/opt/rocm-3.6.0/bin/hipify-perl'
+
+path = './ORIG'
+for (dirpath, dirname, filenames) in walk(path) :
+ print ('dirpath=', dirpath)
+ print ('filename=', filenames)
+ for f in filenames :
+  cmd = '%s %s/%s > ./%s' % (CMD, dirpath, f, f)
+  print (cmd)
+  system(cmd)
+
+
+#/opt/rocm-3.6.0/bin/hipify-perl ./ORIG/cuZFP.cu > ./cuZFP.cu

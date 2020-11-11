@@ -112,6 +112,7 @@ set(PPM_CHROMA 2 CACHE STRING "Chroma block dimensionality for ppm example")
 set_property(CACHE PPM_CHROMA PROPERTY STRINGS "1;2")
 
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
+option(ZFP_WITH_HIP "Enable HIP parallel compression" OFF)
 
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
@@ -156,6 +157,65 @@ endif()
 # compiling and linking
 if(ZFP_WITH_OPENMP AND NOT OpenMP_C_LIBRARIES)
   set(OpenMP_C_LIBRARIES ${OpenMP_C_FLAGS})
+endif()
+
+if(ZFP_WITH_HIP)
+ if(NOT DEFINED HIP_PATH)
+     if(NOT DEFINED ENV{HIP_PATH})
+         set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+     else()
+         set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+     endif()
+ endif()
+
+ if(NOT DEFINED ROCM_PATH)
+     if(DEFINED ENV{ROCM_PATH})
+         set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Path to which ROCM has been installed")
+     elseif(DEFINED ENV{HIP_PATH})
+         set(ROCM_PATH "$ENV{HIP_PATH}/.." CACHE PATH "Path to which ROCM has been installed")
+     else()
+         set(ROCM_PATH "/opt/rocm" CACHE PATH "Path to which ROCM has been installed")
+     endif()
+ endif()
+
+ if(NOT DEFINED HCC_PATH)
+     if(DEFINED ENV{HCC_PATH})
+         set(HCC_PATH $ENV{HCC_PATH} CACHE PATH "Path to which HCC has been installed")
+     else()
+         set(HCC_PATH "${ROCM_PATH}/hcc" CACHE PATH "Path to which HCC has been installed")
+     endif()
+     set(HCC_HOME "${HCC_PATH}")
+ endif()
+
+ if(NOT DEFINED HIP_CLANG_PATH)
+     if(NOT DEFINED ENV{HIP_CLANG_PATH})
+         set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin" CACHE PATH "Path to which HIP compatible clang binaries have been installed")
+     else()
+         set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH} CACHE PATH "Path to which HIP compatible clang binaries have been installed")
+     endif()
+ endif()
+
+ set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+ list(APPEND CMAKE_PREFIX_PATH
+     "${HIP_PATH}/lib/cmake"
+     "${HIP_PATH}/../lib/cmake" # hopefully catches all extra HIP dependencies
+ )
+  
+ find_package(HIP REQUIRED)
+ if(HIP_FOUND)
+     message(STATUS "Found HIP: " ${HIP_VERSION})
+ else()
+     message(FATAL_ERROR "Could not find HIP. Ensure that HIP is either installed in /opt/rocm/hip or the variable HIP_PATH is set to point to the right location.")
+ endif()
+
+ set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+ message(STATUS "Found HIP: " ${HIP_VERSION})
+
+ # For ROCm >=3.5, wipe hip-clang specific interface options which are propagated
+ ##DRP these don't work
+# set_target_properties(hip::device PROPERTIES INTERFACE_COMPILE_OPTIONS "-fPIC")
+# set_target_properties(hip::device PROPERTIES INTERFACE_LINK_LIBRARIES "hip::host")
+
 endif()
 
 if(ZFP_WITH_CUDA)

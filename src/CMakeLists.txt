@@ -9,6 +9,9 @@ if(ZFP_WITH_CUDA)
   add_definitions(-DZFP_WITH_CUDA)
 endif()
 
+if(ZFP_WITH_HIP)
+  add_subdirectory(hip_zfp)  
+endif()  
 
 set(zfp_source
   zfp.c
@@ -44,6 +47,18 @@ endif()
 
 if(ZFP_WITH_CUDA)
   target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
+endif()
+
+if(ZFP_WITH_HIP)
+#  set(MY_HIPCC_OPTIONS "-fPIC")
+#  set(MY_HCC_OPTIONS )
+#  set(MY_NVCC_OPTIONS )
+#  set(MY_CLANG_OPTIONS )
+  
+  #  target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
+##  hip_add_library(zfp_hip STATIC ${zfp_source}  HIPCC_OPTIONS ${MY_HIPCC_OPTIONS} HCC_OPTIONS ${MY_HCC_OPTIONS} NVCC_OPTIONS ${MY_NVCC_OPTIONS})
+#  hip_add_library(zfp STATIC ${MY_SOURCE_FILES} 
+#  target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
 endif()
 
 target_compile_definitions(zfp
